@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Analyzer UI</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%),
+                  radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.18), transparent 30%),
+                  #020617;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .container {
+      width: min(100%, 1080px);
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 32px;
+      padding: 36px;
+      box-shadow: 0 32px 90px rgba(15, 23, 42, 0.35);
+      backdrop-filter: blur(18px);
+    }
+    header {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 3vw, 3rem);
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+    p.subtitle {
+      margin: 10px 0 0;
+      color: #94a3b8;
+      max-width: 760px;
+      line-height: 1.75;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #bfdbfe;
+      font-weight: 700;
+      width: fit-content;
+    }
+    .grid {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1.2fr 0.8fr;
+      align-items: start;
+    }
+    .panel { background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 26px; padding: 26px; }
+    .panel h2 { margin-top: 0; }
+    .panel p { color: #cbd5e1; line-height: 1.7; }
+    .button-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    button.action,
+    a.action {
+      border: none;
+      cursor: pointer;
+      border-radius: 16px;
+      padding: 14px 22px;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      color: #020617;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    button.action:hover,
+    a.action:hover { transform: translateY(-2px); box-shadow: 0 18px 32px rgba(56, 189, 248, 0.22); }
+    .field {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    label { font-size: 0.95rem; color: #94a3b8; }
+    input,
+    textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.75);
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+    input::placeholder,
+    textarea::placeholder { color: #64748b; }
+    .status-box {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(2, 18, 38, 0.92);
+      border: 1px solid rgba(71, 85, 105, 0.14);
+      color: #cbd5e1;
+      min-height: 140px;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      overflow-x: auto;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="tag">Resume Analyzer</span>
+      <div>
+        <h1>FastAPI frontend with DB controls</h1>
+        <p class="subtitle">Use this page to call the root API, check the user count, and add a new MongoDB user entry.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>API Actions</h2>
+        <p>Click buttons below to call the backend endpoints. The response appears in the panel on the right.</p>
+
+        <div class="button-group">
+          <button class="action" id="call-root">Call /</button>
+          <button class="action" id="check-db">DB health</button>
+          <button class="action" id="call-count">Get user count</button>
+          <button class="action" id="local-analyze-jd">Analyze JD (Local)</button>
+          <button class="action" id="analyze-jd">Analyze JD (OpenRouter)</button>
+          <button class="action" id="match-resume">Match Resume</button>
+          <button class="action" id="score-resume">Score Resume</button>
+          <button class="action" id="tailor-resume">Tailor Resume</button>
+          <button class="action" id="predict-jobs">Predict Jobs</button>
+          <button class="action" id="download-pdf">Download PDF</button>
+          <a class="action" href="/docs" target="_blank">Open Swagger</a>
+        </div>
+
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" type="text" placeholder="Ali" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="ali@example.com" />
+        </div>
+        <div class="field">
+          <label for="job-desc">Job Description</label>
+          <textarea id="job-desc" rows="5" placeholder="We need a Python developer with FastAPI and MongoDB experience..."></textarea>
+        </div>
+        <div class="field">
+          <label for="target-role">Target Role</label>
+          <input id="target-role" type="text" placeholder="Data Analyst, Machine Learning Engineer" />
+        </div>
+        <div class="field">
+          <label for="skills">Skills</label>
+          <textarea id="skills" rows="3" placeholder="Python, SQL, communication"></textarea>
+        </div>
+        <div class="field">
+          <label for="education">Education</label>
+          <textarea id="education" rows="3" placeholder="B.Sc. Computer Science, M.Sc. Data Science"></textarea>
+        </div>
+        <div class="field">
+          <label for="experience">Experience</label>
+          <textarea id="experience" rows="3" placeholder="Company A - Data Analyst, Company B - Research Intern"></textarea>
+        </div>
+        <div class="field">
+          <label for="projects">Projects</label>
+          <textarea id="projects" rows="3" placeholder="Resume classifier, job prediction model"></textarea>
+        </div>
+        <div class="field">
+          <label for="certifications">Certifications</label>
+          <textarea id="certifications" rows="3" placeholder="AWS Certified Data Analytics, Coursera ML"></textarea>
+        </div>
+        <div class="button-group">
+          <button class="action" id="create-user">Create Profile</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Response</h2>
+        <div class="status-box" id="response">Press a button to call the backend.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const rootButton = document.getElementById('call-root');
+    const dbHealthButton = document.getElementById('check-db');
+    const countButton = document.getElementById('call-count');
+    const createButton = document.getElementById('create-user');
+    const responseEl = document.getElementById('response');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const targetRoleInput = document.getElementById('target-role');
+    const skillsInput = document.getElementById('skills');
+    const educationInput = document.getElementById('education');
+    const experienceInput = document.getElementById('experience');
+    const projectsInput = document.getElementById('projects');
+    const certificationsInput = document.getElementById('certifications');
+    const jobDescriptionInput = document.getElementById('job-desc');
+    const analyzeButton = document.getElementById('analyze-jd');
+    const localAnalyzeButton = document.getElementById('local-analyze-jd');
+    const matchResumeButton = document.getElementById('match-resume');
+    const scoreResumeButton = document.getElementById('score-resume');
+    const tailorResumeButton = document.getElementById('tailor-resume');
+    const predictJobsButton = document.getElementById('predict-jobs');
+    const downloadPdfButton = document.getElementById('download-pdf');
+
+    const show = (text) => { responseEl.textContent = text; };
+
+    const splitList = (value) => value.split(',').map(item => item.trim()).filter(Boolean);
+
+    const getProfilePayload = () => ({
+      name: nameInput.value.trim(),
+      email: emailInput.value.trim(),
+      target_role: targetRoleInput.value.trim() || null,
+      skills: splitList(skillsInput.value),
+      education: splitList(educationInput.value),
+      experience: splitList(experienceInput.value),
+      projects: splitList(projectsInput.value),
+      certifications: splitList(certificationsInput.value)
+    });
+
+    const requestJson = async (url, options = {}) => {
+      show('Loading...');
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => ({ error: 'Response was not JSON' }));
+      show(JSON.stringify(data, null, 2));
+    };
+
+    const addWrappedText = (doc, text, x, y, maxWidth, lineHeight) => {
+      const lines = doc.splitTextToSize(text || '', maxWidth);
+      lines.forEach((line) => {
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(line, x, y);
+        y += lineHeight;
+      });
+      return y;
+    };
+
+    const addSection = (doc, title, items, y) => {
+      const cleanItems = items.filter(Boolean);
+      if (!cleanItems.length) return y;
+
+      if (y > 265) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(title, 15, y);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      cleanItems.forEach((item) => {
+        y = addWrappedText(doc, `- ${item}`, 18, y, 175, 6);
+      });
+      return y + 3;
+    };
+
+    const downloadResumePdf = () => {
+      if (!window.jspdf?.jsPDF) {
+        show('jsPDF library is not loaded. Check your internet connection and refresh the page.');
+        return;
+      }
+
+      const profile = getProfilePayload();
+      if (!profile.name || !profile.email) {
+        show('Name and email are required before downloading the resume PDF.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 18;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.text(profile.name, 15, y);
+      y += 8;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      const headerParts = [profile.email, profile.target_role].filter(Boolean);
+      y = addWrappedText(doc, headerParts.join(' | '), 15, y, 180, 6) + 4;
+
+      const summaryParts = [];
+      if (profile.target_role) summaryParts.push(`Target Role: ${profile.target_role}`);
+      if (profile.skills.length) summaryParts.push(`Core Skills: ${profile.skills.join(', ')}`);
+      y = addSection(doc, 'Professional Summary', summaryParts, y);
+      y = addSection(doc, 'Skills', profile.skills, y);
+      y = addSection(doc, 'Experience', profile.experience, y);
+      y = addSection(doc, 'Projects', profile.projects, y);
+      y = addSection(doc, 'Education', profile.education, y);
+      y = addSection(doc, 'Certifications', profile.certifications, y);
+
+      const fileName = `${profile.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'resume'}-resume.pdf`;
+      doc.save(fileName);
+      show(`PDF generated: ${fileName}`);
+    };
+
+    rootButton.addEventListener('click', async () => {
+      try { await requestJson('/', { headers: { accept: 'application/json' } }); }
+      catch (err) { show('Error: ' + err.message); }
+    });
+
+    dbHealthButton.addEventListener('click', async () => {
+      try { await requestJson('/db/health', { headers: { accept: 'application/json' } }); }
+      catch (err) { show('Error: ' + err.message); }
+    });
+
+    countButton.addEventListener('click', async () => {
+      try { await requestJson('/db/users/count', { headers: { accept: 'application/json' } }); }
+      catch (err) { show('Error: ' + err.message); }
+    });
+
+    localAnalyzeButton.addEventListener('click', async () => {
+      const description = jobDescriptionInput.value.trim();
+      if (!description) {
+        show('Paste a job description before analyzing.');
+        return;
+      }
+
+      try {
+        await requestJson('/db/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ description })
+        });
+      } catch (err) {
+        show('Error: ' + err.message);
+      }
+    });
+
+    analyzeButton.addEventListener('click', async () => {
+      const description = jobDescriptionInput.value.trim();
+      if (!description) {
+        show('Paste a job description before analyzing.');
+        return;
+      }
+
+        try {
+        await requestJson('/db/ai/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ description })
+        });
+      } catch (err) {
+        show('Error: ' + err.message);
+      }
+    });
+
+    createButton.addEventListener('click', async () => {
+      const profile = getProfilePayload();
+
+      if (!profile.name || !profile.email) {
+        show('Name and email are required.');
+        return;
+      }
+
+      try {
+        await requestJson('/db/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify(profile)
+        });
+      } catch (err) {
+        show('Error: ' + err.message);
+      }
+    });
+
+    matchResumeButton.addEventListener('click', async () => {
+      const profile = getProfilePayload();
+      const jobDescription = jobDescriptionInput.value.trim();
+
+      if (!profile.name || !profile.email || !jobDescription) {
+        show('Name, email, and job description are required for resume matching.');
+        return;
+      }
+
+      try {
+        await requestJson('/db/resume/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ ...profile, job_description: jobDescription })
+        });
+      } catch (err) {
+        show('Error: ' + err.message);
+      }
+    });
+
+    scoreResumeButton.addEventListener('click', async () => {
+      const profile = getProfilePayload();
+      const jobDescription = jobDescriptionInput.value.trim();
+
+      if (!profile.name || !profile.email || !jobDescription) {
+        show('Name, email, and job description are required for resume scoring.');
+        return;
+      }
+
+      try {
+        await requestJson('/db/resume/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ ...profile, job_description: jobDescription })
+        });
+      } catch (err) {
+        show('Error: ' + err.message);
+      }
+    });
+
+    tailorResumeButton.addEventListener('click', async () => {
+      const profile = getProfilePayload();
+      const jobDescription = jobDescriptionInput.value.trim();
+
+      if (!profile.name || !profile.email || !jobDescription) {
+        show('Name, email, and job description are required for resume tailoring.');
+        return;
+      }
+
+      try {
+        await requestJson('/db/resume/tailor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ ...profile, job_description: jobDescription })
+        });
+      } catch (err) {
+        show('Error: ' + err.message);
+      }
+    });
+
+    predictJobsButton.addEventListener('click', async () => {
+      const profile = getProfilePayload();
+
+      if (!profile.name || !profile.email) {
+        show('Name and email are required for job prediction.');
+        return;
+      }
+
+      try {
+        await requestJson('/db/jobs/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify(profile)
+        });
+      } catch (err) {
+        show('Error: ' + err.message);
+      }
+    });
+
+    downloadPdfButton.addEventListener('click', downloadResumePdf);
+  </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+import type { UserProfile } from "@/types";
+import type { TemplateName } from "@/templates";
+
+export interface TemplateRecommendation {
+  recommended: TemplateName;
+  confidence: number;
+  reasons: string[];
+  scores: Record<TemplateName, number>;
+}
+
+const TECH_SKILLS = [
+  "python", "javascript", "typescript", "react", "nextjs", "next.js", "nodejs",
+  "mongodb", "sql", "java", "c++", "c", "embedded", "esp32", "arduino", "stm32",
+  "firmware", "iot", "ml", "ai", "docker", "kubernetes", "aws", "linux", "git",
+  "api", "fastapi", "django", "flutter", "hardware", "pcb", "rtos",
+];
+
+const CORPORATE_ROLES = [
+  "manager", "analyst", "consultant", "coordinator", "administrator", "hr",
+  "marketing", "sales", "accountant", "finance", "operations", "executive",
+  "director", "supervisor",
+];
+
+const TECH_ROLES = [
+  "developer", "engineer", "programmer", "architect", "devops", "sre",
+  "embedded", "firmware", "data scientist", "ml engineer", "full stack",
+  "backend", "frontend", "software", "hardware",
+];
+
+function normalize(text: string) {
+  return text.toLowerCase().trim();
+}
+
+function parseExperienceYears(experience: string): number {
+  const match = experience.match(/(\d+(?:\.\d+)?)\s*(?:\+?\s*)?(?:years?|yrs?|y\b)/i);
+  if (match) return parseFloat(match[1]);
+  if (/fresher|student|intern|entry|graduate|no experience/i.test(experience)) return 0;
+  if (experience.trim().length > 20) return 1.5;
+  return 0.5;
+}
+
+function countMatches(text: string, keywords: string[]): number {
+  const lower = normalize(text);
+  return keywords.filter((k) => lower.includes(k)).length;
+}
+
+export function recommendTemplate(
+  profile: UserProfile,
+  jobDescription = ""
+): TemplateRecommendation {
+  const combined = [
+    profile.targetRole,
+    profile.skills,
+    profile.experience,
+    profile.projects,
+    profile.education,
+    jobDescription,
+  ].join(" ");
+
+  const lower = normalize(combined);
+  const years = parseExperienceYears(profile.experience);
+  const techSkillCount = countMatches(profile.skills, TECH_SKILLS);
+  const techRoleScore = countMatches(profile.targetRole, TECH_ROLES);
+  const corporateScore = countMatches(profile.targetRole, CORPORATE_ROLES);
+  const jdTechScore = countMatches(jobDescription, TECH_SKILLS);
+  const isStudent =
+    /student|fresher|intern|graduate|b\.s|bs |bachelor|university|college/i.test(
+      combined
+    ) && years < 1.5;
+
+  const scores: Record<TemplateName, number> = {
+    minimal: 0,
+    professional: 0,
+    modern: 0,
+  };
+
+  // Minimal: freshers, short profiles, students
+  if (years <= 1) scores.minimal += 35;
+  if (isStudent) scores.minimal += 25;
+  if (profile.experience.length < 80) scores.minimal += 15;
+  if (profile.projects.split(",").length <= 2) scores.minimal += 10;
+
+  // Professional: corporate, senior, business-facing
+  if (years >= 5) scores.professional += 25;
+  if (corporateScore > 0) scores.professional += 40;
+  if (years >= 2 && years < 5 && corporateScore === 0 && techRoleScore === 0) {
+    scores.professional += 20;
+  }
+  if (/leadership|management|stakeholder|client|business/i.test(lower)) {
+    scores.professional += 20;
+  }
+
+  // Modern: tech roles, developers, engineers, project-heavy
+  if (techRoleScore > 0) scores.modern += 35;
+  if (techSkillCount >= 3) scores.modern += 30;
+  if (jdTechScore >= 2) scores.modern += 15;
+  if (/embedded|firmware|esp32|stm32|arduino|iot/i.test(lower)) scores.modern += 25;
+  if (profile.projects.length > 60) scores.modern += 15;
+  if (years >= 1 && years <= 6 && techRoleScore > 0) scores.modern += 15;
+
+  // Tie-break: embedded/hardware leans modern; pure corporate leans professional
+  if (scores.professional === scores.modern && techRoleScore > 0) {
+    scores.modern += 5;
+  }
+
+  const sorted = (Object.entries(scores) as [TemplateName, number][]).sort(
+    (a, b) => b[1] - a[1]
+  );
+
+  const [recommended, topScore] = sorted[0];
+  const secondScore = sorted[1][1];
+  const confidence = Math.min(
+    95,
+    Math.max(55, Math.round(50 + (topScore - secondScore) * 2))
+  );
+
+  const reasons: string[] = [];
+
+  if (recommended === "minimal") {
+    reasons.push("Entry-level or concise profile detected");
+    if (isStudent) reasons.push("Student/fresher profile suits a clean short layout");
+  } else if (recommended === "professional") {
+    reasons.push("Corporate or senior-style role detected");
+    if (years >= 5) reasons.push(`${years}+ years experience fits formal structure`);
+  } else {
+    reasons.push("Technical role and skills detected");
+    if (techSkillCount >= 3) reasons.push(`${techSkillCount}+ tech skills — project-focused layout works best`);
+    if (/embedded|firmware|iot/i.test(lower)) {
+      reasons.push("Embedded/IoT profile — modern engineering template recommended");
+    }
+  }
+
+  return { recommended, confidence, reasons, scores };
+}
+
+export const TEMPLATE_LABELS: Record<TemplateName, string> = {
+  minimal: "Minimal",
+  professional: "Professional",
+  modern: "Modern Tech",
+};
+
+export const TEMPLATE_DESCRIPTIONS: Record<TemplateName, string> = {
+  minimal: "Clean & short — best for students and freshers",
+  professional: "Formal corporate — managers, analysts, senior roles",
+  modern: "Tech-focused — developers, engineers, embedded/IoT",
+};

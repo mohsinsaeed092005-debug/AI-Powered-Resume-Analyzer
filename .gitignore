@@ -1,0 +1,58 @@
+# Environment and secrets (never commit real values)
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.*.local
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# Vercel
+.vercel
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+*.code-workspace.user
+
+# ML models (large binaries — not for GitHub; use EMBEDDING_MODEL_NAME or download locally)
+models/
+
+# Optional local credentials
+credentials.json
+*.pem
+secrets/
