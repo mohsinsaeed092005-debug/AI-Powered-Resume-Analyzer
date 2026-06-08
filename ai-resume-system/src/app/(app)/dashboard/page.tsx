@@ -1,25 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { RolePrediction } from "@/types";
 
-export default function DashboardPage() {
-  const [atsScore, setAtsScore] = useState(0);
-  const [predictions, setPredictions] = useState<RolePrediction[]>([]);
+function loadDashboardState(): {
+  atsScore: number;
+  predictions: RolePrediction[];
+} {
+  if (typeof window === "undefined") {
+    return { atsScore: 0, predictions: [] as RolePrediction[] };
+  }
 
-  useEffect(() => {
-    const saved = localStorage.getItem("ai-resume-state");
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.atsScore) setAtsScore(data.atsScore);
-        if (data.predictions) setPredictions(data.predictions);
-      } catch {
-        /* ignore */
-      }
-    }
-  }, []);
+  const saved = localStorage.getItem("ai-resume-state");
+  if (!saved) {
+    return { atsScore: 0, predictions: [] as RolePrediction[] };
+  }
+
+  try {
+    const data = JSON.parse(saved);
+    return {
+      atsScore: data.atsScore ?? 0,
+      predictions: data.predictions ?? [],
+    };
+  } catch {
+    return { atsScore: 0, predictions: [] as RolePrediction[] };
+  }
+}
+
+export default function DashboardPage() {
+  const [{ atsScore, predictions }] = useState(loadDashboardState);
 
   const quickActions = [
     {
@@ -49,7 +59,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-8 text-white">
+    <div className="text-white">
       <div className="mb-8">
         <h1
           className="mb-1 text-3xl font-bold tracking-tight"
@@ -60,7 +70,7 @@ export default function DashboardPage() {
         <p className="text-sm text-slate-400">Your job search command center</p>
       </div>
 
-      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {
             label: "ATS Score",
@@ -85,7 +95,7 @@ export default function DashboardPage() {
         ].map(({ label, value, color }) => (
           <div
             key={label}
-            className="rounded-2xl border border-blue-500/15 bg-[#0b1120] p-5"
+            className="rounded-2xl border border-blue-500/15 bg-[#0b1120] p-4 sm:p-5"
           >
             <div className="mb-2 text-xs tracking-widest text-slate-500 uppercase">
               {label}
@@ -125,8 +135,8 @@ export default function DashboardPage() {
       </div>
 
       {atsScore > 0 && (
-        <div className="mb-6 rounded-2xl border border-blue-500/15 bg-[#0b1120] p-6">
-          <div className="mb-3 flex justify-between text-sm">
+        <div className="mb-6 rounded-2xl border border-blue-500/15 bg-[#0b1120] p-4 sm:p-6">
+          <div className="mb-3 flex flex-wrap justify-between gap-2 text-sm">
             <span className="text-slate-400">ATS Compatibility Score</span>
             <span className="font-semibold text-blue-400">{atsScore} / 100</span>
           </div>
@@ -147,16 +157,16 @@ export default function DashboardPage() {
       )}
 
       {predictions.length > 0 && (
-        <div className="rounded-2xl border border-blue-500/15 bg-[#0b1120] p-6">
+        <div className="rounded-2xl border border-blue-500/15 bg-[#0b1120] p-4 sm:p-6">
           <h2 className="mb-4 text-sm font-medium tracking-widest text-slate-400 uppercase">
             Top Predicted Roles
           </h2>
           <div className="flex flex-col gap-3">
             {predictions.slice(0, 5).map((p) => (
-              <div key={p.role} className="flex items-center justify-between">
+              <div key={p.role} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-sm text-white">{p.role}</span>
-                <div className="flex items-center gap-3">
-                  <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/5">
+                <div className="flex min-w-0 items-center gap-3 sm:w-44">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-600"
                       style={{ width: `${p.matchScore}%` }}
@@ -173,7 +183,7 @@ export default function DashboardPage() {
       )}
 
       {!atsScore && predictions.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-blue-500/20 bg-[#0b1120] p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-blue-500/20 bg-[#0b1120] p-6 text-center sm:p-12">
           <div className="mb-4 text-4xl">🚀</div>
           <h3
             className="mb-2 text-lg font-semibold"

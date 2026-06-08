@@ -14,8 +14,8 @@ export default function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed z-20 flex h-full w-56 flex-col border-r border-blue-500/15 bg-[#080e1e]">
-      <div className="border-b border-blue-500/15 px-5 py-5">
+    <aside className="fixed inset-x-0 bottom-0 z-20 border-t border-blue-500/15 bg-[#080e1e]/95 backdrop-blur lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:h-full lg:w-56 lg:flex-col lg:border-r lg:border-t-0 lg:bg-[#080e1e]">
+      <div className="hidden border-b border-blue-500/15 px-5 py-5 lg:block">
         <Link
           href="/"
           className="flex items-center gap-2.5 text-lg font-bold text-white"
@@ -27,26 +27,26 @@ export default function AppSidebar() {
           ResumeAI
         </Link>
       </div>
-      <nav className="flex-1 py-4">
+      <nav className="grid grid-cols-4 gap-1 px-2 py-2 lg:block lg:flex-1 lg:px-0 lg:py-4">
         {navItems.map(({ href, icon, label }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-5 py-3 text-sm transition-all ${
+              className={`flex min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-2 text-[11px] transition-all sm:text-xs lg:flex-row lg:gap-3 lg:rounded-none lg:px-5 lg:py-3 lg:text-sm ${
                 active
-                  ? "border-r-2 border-blue-500 bg-blue-500/10 font-medium text-blue-400"
+                  ? "bg-blue-500/10 font-medium text-blue-400 lg:border-r-2 lg:border-blue-500"
                   : "text-slate-400 hover:bg-white/[0.03] hover:text-white"
               }`}
             >
-              <span className="text-base">{icon}</span>
-              {label}
+              <span className="text-base leading-none">{icon}</span>
+              <span className="max-w-full truncate">{label}</span>
             </Link>
           );
         })}
       </nav>
-      <div className="border-t border-blue-500/15 p-4">
+      <div className="hidden border-t border-blue-500/15 p-4 lg:block">
         <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 text-xs text-slate-400">
           <div className="mb-1 font-medium text-blue-400">🚀 Pro Tip</div>
           Add a job description to boost your ATS score.

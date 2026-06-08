@@ -15,8 +15,8 @@ export default function ProfilePage() {
 
   if (session) {
     return (
-      <div className="p-8 text-white">
-        <div className="max-w-md rounded-2xl border border-blue-500/15 bg-[#0b1120] p-8">
+      <div className="text-white">
+        <div className="max-w-md rounded-2xl border border-blue-500/15 bg-[#0b1120] p-5 sm:p-8">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 text-2xl">
             {session.user?.name?.[0] ?? "U"}
           </div>
@@ -28,7 +28,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-0px)] items-center justify-center bg-[#050912] p-6">
+    <div className="flex min-h-[calc(100vh-9rem)] items-center justify-center bg-[#050912] py-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div
@@ -43,7 +43,7 @@ export default function ProfilePage() {
           <p className="text-sm text-slate-400">Your AI-powered career companion</p>
         </div>
 
-        <div className="rounded-2xl border border-blue-500/15 bg-[#0b1120] p-8">
+        <div className="rounded-2xl border border-blue-500/15 bg-[#0b1120] p-5 sm:p-8">
           <div className="mb-7 flex border-b border-blue-500/15">
             {(["signin", "join"] as const).map((t) => (
               <button
