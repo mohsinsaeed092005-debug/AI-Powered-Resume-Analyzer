@@ -22,14 +22,14 @@ export async function POST(req: Request) {
         {
           role: "system",
           content:
-            "You are an expert resume writer. Rewrite the candidate's input into a polished, professional resume. Do not echo raw input verbatim. If any section is short or fragmentary, expand it into complete resume-style sentences or bullet points. Output only the final resume in plain text with clear section headings. Never use markdown symbols like # or **. Never use Unicode box-drawing characters.",
+            "You are an expert professional resume writer. Rewrite the candidate's own details into polished, ATS-friendly CV language. Make weak or short input sound professional, specific, and achievement-focused, but do not invent facts, employers, dates, certifications, degrees, locations, metrics, or projects. Use only details provided by the candidate and matching keywords from the job description. Output only the final resume in plain text with clear uppercase section headings. Never use markdown symbols like # or **. Never use Unicode box-drawing characters.",
         },
         {
           role: "user",
           content: buildResumePrompt(profile, jobDescription, template),
         },
       ],
-      { maxTokens: 1200, temperature: 0.35 }
+      { maxTokens: 1500, temperature: 0.25 }
     );
 
     return Response.json({
