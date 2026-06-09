@@ -4,18 +4,30 @@ const OPENROUTER_API_URL =
   process.env.OPENROUTER_URL ||
   "https://openrouter.ai/api/v1/chat/completions";
 
+function getOpenRouterKeys() {
+  return [
+    process.env.OPENROUTER_API_KEY,
+    process.env.OPENROUTER_API_KEY_2,
+    process.env.OPENROUTER_API_KEY_3,
+    ...(process.env.OPENROUTER_API_KEYS?.split(",") ?? []),
+  ]
+    .map((key) => key?.trim())
+    .filter((key): key is string => Boolean(key));
+}
+
 export async function askAI(
   messages: { role: "system" | "user" | "assistant"; content: string }[],
   options?: { maxTokens?: number; temperature?: number }
 ) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
+  const apiKeys = getOpenRouterKeys();
+  if (!apiKeys.length) {
     throw new Error("AI service is not configured. Contact the administrator.");
   }
 
-  const response = await fetch(
-    OPENROUTER_API_URL,
-    {
+  let lastError = "";
+
+  for (const [index, apiKey] of apiKeys.entries()) {
+    const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -29,20 +41,22 @@ export async function askAI(
         temperature: options?.temperature ?? 0.4,
         max_tokens: options?.maxTokens ?? 2000,
       }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      return data;
     }
-  );
 
-  const data = await response.json();
-
-  if (!response.ok) {
     const msg =
       data?.error?.message ||
       data?.error ||
       `OpenRouter HTTP ${response.status}`;
-    throw new Error(String(msg));
+    lastError = `OpenRouter key ${index + 1}: ${String(msg)}`;
   }
 
-  return data;
+  throw new Error(lastError || "AI service is temporarily unavailable.");
 }
 
 export async function askAIText(
