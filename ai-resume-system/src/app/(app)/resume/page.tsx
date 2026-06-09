@@ -7,7 +7,7 @@ import ResumePreview from "@/components/ResumePreview";
 import ATSScoreCard from "@/components/ATSScoreCard";
 import SkillGapCard from "@/components/SkillGapCard";
 import TemplatePicker from "@/components/TemplatePicker";
-import { applyTemplate, type TemplateName } from "@/templates";
+import { applyTemplate, DEFAULT_TEMPLATE, type TemplateName } from "@/templates";
 import {
   recommendTemplate,
   type TemplateRecommendation,
@@ -44,7 +44,7 @@ export default function ResumePage() {
   const [error, setError] = useState("");
   const [atsScore, setAtsScore] = useState(0);
   const [skillGap, setSkillGap] = useState<SkillGapResult | null>(null);
-  const [template, setTemplate] = useState<TemplateName>("professional");
+  const [template, setTemplate] = useState<TemplateName>(DEFAULT_TEMPLATE);
   const [recommendation, setRecommendation] = useState<TemplateRecommendation | null>(null);
   const [manualTemplate, setManualTemplate] = useState(false);
   const [interviewQuestions, setInterviewQuestions] = useState("");
@@ -214,10 +214,18 @@ export default function ResumePage() {
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <ATSScoreCard score={atsScore} />
-            <DownloadPDFButton content={content} fileName={pdfFileName} />
+            <DownloadPDFButton
+              content={content}
+              fileName={pdfFileName}
+              template={template}
+            />
           </div>
           <SkillGapCard gap={skillGap} />
-          <ResumePreview content={content} source={contentSource} />
+          <ResumePreview
+            content={content}
+            source={contentSource}
+            template={template}
+          />
           <button
             type="button"
             onClick={fetchInterviewQuestions}

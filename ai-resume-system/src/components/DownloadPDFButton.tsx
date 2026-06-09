@@ -2,15 +2,18 @@
 
 import { memo, useCallback, useState } from "react";
 import { Download } from "lucide-react";
+import { DEFAULT_TEMPLATE, type TemplateName } from "@/templates";
 
 interface DownloadPDFButtonProps {
   content: string;
   fileName?: string;
+  template?: TemplateName;
 }
 
 function DownloadPDFButton({
   content,
   fileName = "resume.pdf",
+  template = DEFAULT_TEMPLATE,
 }: DownloadPDFButtonProps) {
   const [exporting, setExporting] = useState(false);
 
@@ -19,11 +22,11 @@ function DownloadPDFButton({
     setExporting(true);
     try {
       const { exportResumePdf } = await import("@/utils/pdf-export");
-      await exportResumePdf(content, fileName);
+      await exportResumePdf(content, fileName, template);
     } finally {
       setExporting(false);
     }
-  }, [content, fileName, exporting]);
+  }, [content, fileName, template, exporting]);
 
   return (
     <button

@@ -69,38 +69,43 @@ export function recommendTemplate(
     ) && years < 1.5;
 
   const scores: Record<TemplateName, number> = {
-    minimal: 0,
-    professional: 0,
-    modern: 0,
+    "pure-ats": 0,
+    specialist: 0,
+    clean: 0,
+    "simple-ats": 0,
+    corporate: 0,
+    clear: 0,
+    "precision-ats": 0,
+    "two-column-ats": 0,
   };
 
-  // Minimal: freshers, short profiles, students
-  if (years <= 1) scores.minimal += 35;
-  if (isStudent) scores.minimal += 25;
-  if (profile.experience.length < 80) scores.minimal += 15;
-  if (profile.projects.split(",").length <= 2) scores.minimal += 10;
+  // ATS/simple templates: freshers, short profiles, students
+  if (years <= 1) scores["pure-ats"] += 35;
+  if (isStudent) scores["pure-ats"] += 25;
+  if (profile.experience.length < 80) scores.clean += 15;
+  if (profile.projects.split(",").length <= 2) scores["simple-ats"] += 10;
 
-  // Professional: corporate, senior, business-facing
-  if (years >= 5) scores.professional += 25;
-  if (corporateScore > 0) scores.professional += 40;
+  // Specialist/corporate: corporate, senior, business-facing
+  if (years >= 5) scores.specialist += 25;
+  if (corporateScore > 0) scores.corporate += 40;
   if (years >= 2 && years < 5 && corporateScore === 0 && techRoleScore === 0) {
-    scores.professional += 20;
+    scores.specialist += 20;
   }
   if (/leadership|management|stakeholder|client|business/i.test(lower)) {
-    scores.professional += 20;
+    scores.corporate += 20;
   }
 
-  // Modern: tech roles, developers, engineers, project-heavy
-  if (techRoleScore > 0) scores.modern += 35;
-  if (techSkillCount >= 3) scores.modern += 30;
-  if (jdTechScore >= 2) scores.modern += 15;
-  if (/embedded|firmware|esp32|stm32|arduino|iot/i.test(lower)) scores.modern += 25;
-  if (profile.projects.length > 60) scores.modern += 15;
-  if (years >= 1 && years <= 6 && techRoleScore > 0) scores.modern += 15;
+  // Modern/technical templates: tech roles, developers, engineers, project-heavy
+  if (techRoleScore > 0) scores["two-column-ats"] += 35;
+  if (techSkillCount >= 3) scores.clear += 30;
+  if (jdTechScore >= 2) scores["precision-ats"] += 15;
+  if (/embedded|firmware|esp32|stm32|arduino|iot/i.test(lower)) scores["two-column-ats"] += 25;
+  if (profile.projects.length > 60) scores.clear += 15;
+  if (years >= 1 && years <= 6 && techRoleScore > 0) scores["precision-ats"] += 15;
 
   // Tie-break: embedded/hardware leans modern; pure corporate leans professional
-  if (scores.professional === scores.modern && techRoleScore > 0) {
-    scores.modern += 5;
+  if (scores.specialist === scores["two-column-ats"] && techRoleScore > 0) {
+    scores["two-column-ats"] += 5;
   }
 
   const sorted = (Object.entries(scores) as [TemplateName, number][]).sort(
@@ -116,10 +121,10 @@ export function recommendTemplate(
 
   const reasons: string[] = [];
 
-  if (recommended === "minimal") {
+  if (recommended === "pure-ats" || recommended === "simple-ats") {
     reasons.push("Entry-level or concise profile detected");
     if (isStudent) reasons.push("Student/fresher profile suits a clean short layout");
-  } else if (recommended === "professional") {
+  } else if (recommended === "specialist" || recommended === "corporate") {
     reasons.push("Corporate or senior-style role detected");
     if (years >= 5) reasons.push(`${years}+ years experience fits formal structure`);
   } else {
@@ -134,13 +139,23 @@ export function recommendTemplate(
 }
 
 export const TEMPLATE_LABELS: Record<TemplateName, string> = {
-  minimal: "Minimal",
-  professional: "Professional",
-  modern: "Modern Tech",
+  "pure-ats": "Pure ATS",
+  specialist: "Specialist",
+  clean: "Clean",
+  "simple-ats": "Simple ATS",
+  corporate: "Corporate",
+  clear: "Clear",
+  "precision-ats": "Precision ATS",
+  "two-column-ats": "Two Column ATS",
 };
 
 export const TEMPLATE_DESCRIPTIONS: Record<TemplateName, string> = {
-  minimal: "Clean & short — best for students and freshers",
-  professional: "Formal corporate — managers, analysts, senior roles",
-  modern: "Tech-focused — developers, engineers, embedded/IoT",
+  "pure-ats": "Strict ATS layout with clean black text and simple sections",
+  specialist: "Traditional specialist layout for experienced professionals",
+  clean: "Modern white-space focused resume with a left profile column",
+  "simple-ats": "Light ATS resume with blue headings and easy scanning",
+  corporate: "Corporate layout for business, HR, finance, and operations",
+  clear: "Fresh layout with strong header and skill emphasis",
+  "precision-ats": "Precise ATS layout with warm headings and balanced spacing",
+  "two-column-ats": "Two-column ATS format for skills-heavy profiles",
 };

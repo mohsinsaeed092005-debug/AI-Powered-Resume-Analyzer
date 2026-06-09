@@ -1,14 +1,15 @@
 import type { UserProfile } from "@/types";
-import type { TemplateName } from "@/templates";
+import { DEFAULT_TEMPLATE, type TemplateName } from "@/templates";
 
 export function buildResumePrompt(
   profile: UserProfile,
   jobDescription: string,
-  template: TemplateName = "professional"
+  template: TemplateName = DEFAULT_TEMPLATE
 ) {
   return `You are an elite professional resume writer, ATS optimization specialist, and career strategist with 20+ years of experience crafting resumes that land interviews.
 
 Your task: Transform the candidate's raw input into a compelling, ATS-optimized, job-ready resume that positions them for success.
+Selected visual template: ${template}. Keep content concise enough to fit this layout cleanly.
 
 CRITICAL RULES:
 1. REWRITE everything — do NOT repeat raw input verbatim. Every section must be polished, professional, and impactful.

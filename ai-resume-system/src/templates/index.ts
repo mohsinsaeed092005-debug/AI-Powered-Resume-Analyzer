@@ -64,14 +64,59 @@ export function modernTemplate(profile: UserProfile) {
   ].join("\n");
 }
 
-export type TemplateName = "minimal" | "professional" | "modern";
+export type TemplateName =
+  | "pure-ats"
+  | "specialist"
+  | "clean"
+  | "simple-ats"
+  | "corporate"
+  | "clear"
+  | "precision-ats"
+  | "two-column-ats";
+
+export const DEFAULT_TEMPLATE: TemplateName = "specialist";
+
+export const TEMPLATE_NAMES: TemplateName[] = [
+  "pure-ats",
+  "specialist",
+  "clean",
+  "simple-ats",
+  "corporate",
+  "clear",
+  "precision-ats",
+  "two-column-ats",
+];
 
 export function applyTemplate(name: TemplateName, profile: UserProfile) {
   switch (name) {
-    case "professional":
+    case "specialist":
+    case "simple-ats":
+    case "precision-ats":
       return professionalTemplate(profile);
-    case "modern":
+    case "clean":
+    case "clear":
+    case "two-column-ats":
       return modernTemplate(profile);
+    case "corporate":
+      return [
+        profile.name.toUpperCase(),
+        `${profile.email} | ${profile.targetRole}`,
+        "",
+        "PROFILE",
+        `Organized ${profile.targetRole} with practical experience across ${profile.skills}. Known for clear communication, consistent execution, and measurable delivery.`,
+        "",
+        "WORK EXPERIENCE",
+        `- ${profile.experience}`,
+        "",
+        "SKILLS",
+        profile.skills,
+        "",
+        "PROJECTS",
+        `- ${profile.projects}`,
+        "",
+        "EDUCATION",
+        profile.education,
+      ].join("\n");
     default:
       return minimalTemplate(profile);
   }

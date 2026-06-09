@@ -1,14 +1,14 @@
 ﻿import { askAIText } from "@/lib/openrouter";
 import { buildResumePrompt } from "@/lib/resume-prompt";
 import { sanitizeResumeText } from "@/utils/resume-text";
-import type { TemplateName } from "@/templates";
+import { DEFAULT_TEMPLATE, type TemplateName } from "@/templates";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const profile = body.profile;
     const jobDescription = body.jobDescription || "";
-    const template: TemplateName = body.template || "professional";
+    const template: TemplateName = body.template || DEFAULT_TEMPLATE;
 
     if (!profile?.name || !profile?.email) {
       return Response.json(

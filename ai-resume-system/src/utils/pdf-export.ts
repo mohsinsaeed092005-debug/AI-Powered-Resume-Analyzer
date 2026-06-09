@@ -1,51 +1,144 @@
+import { DEFAULT_TEMPLATE, type TemplateName } from "@/templates";
+
 const SECTION_HEADERS = [
   "PROFESSIONAL SUMMARY",
+  "PROFILE",
   "CORE SKILLS",
   "CORE COMPETENCIES",
   "TECHNICAL SKILLS",
   "PROFESSIONAL EXPERIENCE",
+  "WORK EXPERIENCE",
   "EXPERIENCE",
   "KEY PROJECTS",
   "PROJECTS",
   "EDUCATION",
   "CERTIFICATIONS",
+  "SKILLS",
 ];
 
-// Color scheme
-const COLORS = {
-  headerBg: [26, 42, 71], // Dark blue background
-  headerText: [255, 255, 255], // White text
-  sectionHeading: [30, 78, 216], // Blue headings
-  bodyText: [51, 65, 85], // Dark gray/black
-  borderGray: [226, 232, 240], // Light gray for borders
-  bulletGray: [100, 116, 139], // Muted gray for details
+type Rgb = [number, number, number];
+
+const THEMES: Record<
+  TemplateName,
+  {
+    headerBg: Rgb;
+    headerText: Rgb;
+    sectionHeading: Rgb;
+    bodyText: Rgb;
+    borderGray: Rgb;
+    bulletGray: Rgb;
+    sidebar?: boolean;
+    plainHeader?: boolean;
+  }
+> = {
+  "pure-ats": {
+    headerBg: [255, 255, 255],
+    headerText: [17, 24, 39],
+    sectionHeading: [17, 24, 39],
+    bodyText: [31, 41, 55],
+    borderGray: [156, 163, 175],
+    bulletGray: [75, 85, 99],
+    plainHeader: true,
+  },
+  specialist: {
+    headerBg: [26, 42, 71],
+    headerText: [255, 255, 255],
+    sectionHeading: [30, 78, 216],
+    bodyText: [51, 65, 85],
+    borderGray: [226, 232, 240],
+    bulletGray: [100, 116, 139],
+  },
+  clean: {
+    headerBg: [248, 250, 252],
+    headerText: [15, 23, 42],
+    sectionHeading: [15, 23, 42],
+    bodyText: [51, 65, 85],
+    borderGray: [203, 213, 225],
+    bulletGray: [100, 116, 139],
+    sidebar: true,
+  },
+  "simple-ats": {
+    headerBg: [255, 255, 255],
+    headerText: [37, 99, 235],
+    sectionHeading: [37, 99, 235],
+    bodyText: [51, 65, 85],
+    borderGray: [191, 219, 254],
+    bulletGray: [100, 116, 139],
+    plainHeader: true,
+  },
+  corporate: {
+    headerBg: [248, 250, 252],
+    headerText: [17, 24, 39],
+    sectionHeading: [17, 24, 39],
+    bodyText: [31, 41, 55],
+    borderGray: [203, 213, 225],
+    bulletGray: [75, 85, 99],
+    sidebar: true,
+  },
+  clear: {
+    headerBg: [74, 222, 128],
+    headerText: [15, 23, 42],
+    sectionHeading: [15, 23, 42],
+    bodyText: [51, 65, 85],
+    borderGray: [187, 247, 208],
+    bulletGray: [100, 116, 139],
+    sidebar: true,
+  },
+  "precision-ats": {
+    headerBg: [255, 255, 255],
+    headerText: [196, 98, 45],
+    sectionHeading: [196, 98, 45],
+    bodyText: [51, 65, 85],
+    borderGray: [254, 215, 170],
+    bulletGray: [120, 113, 108],
+    plainHeader: true,
+  },
+  "two-column-ats": {
+    headerBg: [255, 247, 237],
+    headerText: [196, 98, 45],
+    sectionHeading: [196, 98, 45],
+    bodyText: [51, 65, 85],
+    borderGray: [254, 215, 170],
+    bulletGray: [120, 113, 108],
+    sidebar: true,
+  },
 };
 
-export async function exportResumePdf(content: string, fileName = "resume.pdf") {
+export async function exportResumePdf(
+  content: string,
+  fileName = "resume.pdf",
+  template: TemplateName = DEFAULT_TEMPLATE
+) {
   const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 16;
-  const maxWidth = pageWidth - margin * 2;
-  let y = 15;
+  const colors = THEMES[template];
+  const sidebarWidth = colors.sidebar ? 52 : 0;
+  const contentX = colors.sidebar ? margin + sidebarWidth + 8 : margin;
+  const maxWidth = pageWidth - contentX - margin;
+  let y = colors.plainHeader ? 18 : 36;
+
+  const setTextColor = (color: Rgb) => doc.setTextColor(color[0], color[1], color[2]);
 
   const addText = (
     text: string,
     size = 10,
     bold = false,
-    color = COLORS.bodyText,
+    color = colors.bodyText,
     gap = 5
   ) => {
     doc.setFont("helvetica", bold ? "bold" : "normal");
     doc.setFontSize(size);
-    doc.setTextColor(color[0], color[1], color[2]);
+    setTextColor(color);
     const lines = doc.splitTextToSize(text, maxWidth);
     for (const line of lines) {
-      if (y > 275) {
+      if (y > pageHeight - 18) {
         doc.addPage();
-        y = 15;
+        y = 18;
       }
-      doc.text(line, margin, y);
+      doc.text(line, contentX, y);
       y += gap;
     }
   };
@@ -66,31 +159,43 @@ export async function exportResumePdf(content: string, fileName = "resume.pdf") 
     const isContact = isFirstContact && i === 1 && line.includes("@");
 
     if (isName) {
-      // Draw dark blue header background
-      doc.setFillColor(COLORS.headerBg[0], COLORS.headerBg[1], COLORS.headerBg[2]);
-      doc.rect(0, 0, pageWidth, 28, "F");
+      if (!colors.plainHeader) {
+        doc.setFillColor(colors.headerBg[0], colors.headerBg[1], colors.headerBg[2]);
+        doc.rect(0, 0, pageWidth, 28, "F");
+      }
 
-      // Add name in white, bold
+      if (colors.sidebar) {
+        doc.setFillColor(colors.headerBg[0], colors.headerBg[1], colors.headerBg[2]);
+        doc.rect(0, 0, pageWidth, 30, "F");
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, 30, margin + sidebarWidth, pageHeight - 30, "F");
+      }
+
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.setTextColor(COLORS.headerText[0], COLORS.headerText[1], COLORS.headerText[2]);
+      doc.setFontSize(colors.sidebar ? 20 : 22);
+      setTextColor(colors.headerText);
       doc.text(line, margin, 10);
-      y = 18;
+      if (colors.plainHeader) {
+        doc.setDrawColor(colors.borderGray[0], colors.borderGray[1], colors.borderGray[2]);
+        doc.line(margin, 15, pageWidth - margin, 15);
+        y = 22;
+      } else {
+        y = 18;
+      }
       isFirstName = false;
       continue;
     }
 
     if (isContact) {
-      // Add contact info in white on blue header
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.setTextColor(COLORS.headerText[0], COLORS.headerText[1], COLORS.headerText[2]);
+      setTextColor(colors.headerText);
       const contactLines = doc.splitTextToSize(line, maxWidth);
       for (const contactLine of contactLines) {
         doc.text(contactLine, margin, y);
         y += 4;
       }
-      y += 6; // Add gap after header
+      y += colors.plainHeader ? 3 : 6;
       isFirstContact = false;
       continue;
     }
@@ -102,46 +207,39 @@ export async function exportResumePdf(content: string, fileName = "resume.pdf") 
 
     if (isHeader) {
       y += 3;
-      // Section heading in blue
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.setTextColor(COLORS.sectionHeading[0], COLORS.sectionHeading[1], COLORS.sectionHeading[2]);
-      doc.text(line.toUpperCase(), margin, y);
+      setTextColor(colors.sectionHeading);
+      doc.text(line.toUpperCase(), contentX, y);
       y += 6;
 
-      // Add subtle line under heading
-      doc.setDrawColor(COLORS.borderGray[0], COLORS.borderGray[1], COLORS.borderGray[2]);
+      doc.setDrawColor(colors.borderGray[0], colors.borderGray[1], colors.borderGray[2]);
       doc.setLineWidth(0.3);
-      doc.line(margin, y - 1, pageWidth - margin, y - 1);
+      doc.line(contentX, y - 1, pageWidth - margin, y - 1);
       y += 2;
       continue;
     }
 
-    // Body text
     if (line.startsWith("-")) {
-      // Bullet point in dark text
-      addText(line, 10, false, COLORS.bodyText, 4.5);
+      addText(line, 10, false, colors.bodyText, 4.5);
     } else if (line.includes("|")) {
-      // Role/experience line with details
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
-      doc.setTextColor(COLORS.bodyText[0], COLORS.bodyText[1], COLORS.bodyText[2]);
+      setTextColor(colors.bodyText);
       const parts = line.split("|");
       const role = parts[0].trim();
-      doc.text(role, margin, y);
+      doc.text(role, contentX, y);
       
-      // Add secondary info on the right
       if (parts.length > 1) {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(COLORS.bulletGray[0], COLORS.bulletGray[1], COLORS.bulletGray[2]);
+        setTextColor(colors.bulletGray);
         const secondary = parts.slice(1).join(" | ").trim();
         doc.text(secondary, pageWidth - margin - doc.getTextWidth(secondary), y);
       }
       y += 5.5;
     } else {
-      // Regular text
-      addText(line, 10, false, COLORS.bodyText, 5);
+      addText(line, 10, false, colors.bodyText, 5);
     }
   }
 
