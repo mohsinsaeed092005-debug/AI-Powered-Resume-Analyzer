@@ -29,7 +29,7 @@ export async function POST(req: Request) {
           content: buildResumePrompt(profile, jobDescription, template),
         },
       ],
-      { maxTokens: 1500, temperature: 0.25 }
+      { maxTokens: 1000, temperature: 0.25 }
     );
 
     return Response.json({

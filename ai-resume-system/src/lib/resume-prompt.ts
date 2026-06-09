@@ -20,6 +20,8 @@ CRITICAL RULES:
 6. Match relevant job description keywords naturally throughout the resume, but only when they fit the candidate's provided skills and experience.
 7. Keep the tone confident, human, professional, and ATS-friendly. The resume should sound like a polished professional document, not AI filler.
 8. If any detail is missing, omit it gracefully instead of adding placeholders like "Company Name", "Month Year", "Location", or "Not provided".
+9. Preserve acronyms and abbreviations exactly as provided unless the candidate already wrote the full form. For example, if education says "bses", write "BSES" and do not guess what it stands for.
+10. Never include bracketed placeholders such as "[Institution Name]" or "[Location]".
 
 CANDIDATE PROFILE:
 - Name: ${profile.name}
@@ -63,6 +65,8 @@ CONTENT GUIDELINES BY SECTION:
 **EDUCATION**
 - Rewrite the provided education clearly and professionally
 - Do not invent university name, graduation date, GPA, honors, or coursework
+- Do not expand degree abbreviations unless the full degree name was provided
+- If only a short degree/acronym is provided, show that cleanly and stop there
 
 FORMAT REQUIREMENTS:
 - Use plain text ONLY (no markdown, no HTML, no Unicode symbols, no **bold**, no #headers, no emojis)
