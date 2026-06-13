@@ -1,0 +1,24 @@
+VERCEL ENV IMPORT — QUICK STEPS
+================================
+
+1. Open this file in Notepad:
+   ai-resume-system\vercel-import.env
+
+2. Replace every YOUR_... placeholder with your real values:
+   - OPENROUTER_API_KEY  → from your local .env
+   - MONGODB_URI         → MongoDB Atlas connection string (not localhost for production)
+   - NEXTAUTH_SECRET     → any long random string (32+ characters)
+   - NEXTAUTH_URL        → your Vercel URL (update after first deploy if different)
+
+3. On Vercel (Root Directory = ai-resume-system):
+   - Environment Variables → Import .env
+   - Select file: vercel-import.env
+   - Tick: Production + Preview
+
+4. Click Deploy
+
+5. After deploy: copy your real Vercel URL → update NEXTAUTH_URL in Vercel Settings → Redeploy
+
+Teacher link: https://YOUR-VERCEL-URL.vercel.app/resume
+
+NOTE: Do not upload this file to GitHub after filling in real keys.

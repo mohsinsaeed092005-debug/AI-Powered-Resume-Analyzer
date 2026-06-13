@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ResumeForm, { type ResumeFormData } from "@/components/ResumeForm";
 import ResumePreview from "@/components/ResumePreview";
 import ATSScoreCard from "@/components/ATSScoreCard";
@@ -37,6 +38,7 @@ const InterviewQuestionsPanel = dynamic(
 );
 
 export default function ResumePage() {
+  const router = useRouter();
   const [generating, setGenerating] = useState(false);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [content, setContent] = useState("");
@@ -49,6 +51,7 @@ export default function ResumePage() {
   const [manualTemplate, setManualTemplate] = useState(false);
   const [interviewQuestions, setInterviewQuestions] = useState("");
   const [lastProfile, setLastProfile] = useState<ResumeFormData | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState("");
 
   const pdfFileName = useMemo(
     () => `${lastProfile?.name?.replace(/\s+/g, "-").toLowerCase() || "resume"}.pdf`,
@@ -183,6 +186,26 @@ export default function ResumePage() {
     }
   }, [lastProfile, content, loadingQuestions]);
 
+  const predictJobsFromGeneratedResume = useCallback(() => {
+    if (!lastProfile || !content) return;
+
+    localStorage.setItem(
+      "job-predictor-seed",
+      JSON.stringify({
+        skills: lastProfile.skills,
+        targetRole: lastProfile.targetRole,
+        resumeText: content,
+        createdAt: Date.now(),
+      })
+    );
+
+    mergeResumeState({
+      content,
+      profile: lastProfile,
+    });
+    router.push("/job-predictor");
+  }, [content, lastProfile, router]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -209,6 +232,8 @@ export default function ResumePage() {
         <ResumeForm
           onSubmit={handleGenerate}
           onProfileChange={handleProfileChange}
+          profilePhoto={profilePhoto}
+          onProfilePhotoChange={setProfilePhoto}
           loading={generating}
         />
         <div className="space-y-4">
@@ -218,6 +243,7 @@ export default function ResumePage() {
               content={content}
               fileName={pdfFileName}
               template={template}
+              profilePhoto={profilePhoto}
             />
           </div>
           <SkillGapCard gap={skillGap} />
@@ -225,7 +251,16 @@ export default function ResumePage() {
             content={content}
             source={contentSource}
             template={template}
+            profilePhoto={profilePhoto}
           />
+          <button
+            type="button"
+            onClick={predictJobsFromGeneratedResume}
+            disabled={!content || generating}
+            className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+          >
+            Predict Jobs from Generated Resume
+          </button>
           <button
             type="button"
             onClick={fetchInterviewQuestions}

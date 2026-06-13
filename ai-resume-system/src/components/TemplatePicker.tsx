@@ -17,69 +17,150 @@ interface TemplatePickerProps {
 }
 
 const SWATCHES: Record<TemplateName, string[]> = {
-  "pure-ats": ["#111827", "#2563eb", "#4f46e5", "#dc2626", "#d97706"],
-  specialist: ["#0f172a", "#6b7280", "#2563eb", "#dc2626", "#d97706"],
-  clean: ["#0f172a", "#2563eb", "#64748b"],
-  "simple-ats": ["#3b82f6", "#d8a3b2", "#9ca3af", "#8a9278"],
-  corporate: ["#0f172a", "#64748b"],
-  clear: ["#4ade80", "#fef08a", "#67e8f9", "#fbbf24", "#e5e7eb"],
-  "precision-ats": ["#c4622d", "#6b84c2", "#7b8794", "#6f9f85"],
-  "two-column-ats": ["#fb923c", "#65a30d", "#818cf8", "#60a5fa"],
+  "pure-ats": ["#2f3033", "#e5e7eb", "#0ea5e9", "#111827"],
+  specialist: ["#0d0d0c", "#c9a227", "#f5f5f4", "#3f3f46"],
+  clean: ["#07111f", "#00b7ff", "#1e3a5f", "#e2e8f0"],
+  "simple-ats": ["#5b5ca8", "#b76bc0", "#ffffff", "#1f2937"],
+  corporate: ["#16351e", "#f3f0e6", "#6aa84f", "#111827"],
+  clear: ["#1d1916", "#c98331", "#f5f5f4", "#57534e"],
+  "precision-ats": ["#fffdf6", "#c45b1d", "#222222", "#e7e0d1"],
+  "two-column-ats": ["#0f1a2e", "#3b82f6", "#f8fafc", "#93c5fd"],
 };
 
 function TemplateThumbnail({ template }: { template: TemplateName }) {
-  const twoColumn =
-    template === "clean" ||
-    template === "corporate" ||
-    template === "clear" ||
-    template === "two-column-ats";
-  const accent = SWATCHES[template][1] ?? "#2563eb";
-  const warm = template === "precision-ats" || template === "two-column-ats";
+  const accent = SWATCHES[template][1];
 
-  return (
-    <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-white p-4 shadow-sm">
-      <div className="space-y-1">
-        <div
-          className="h-3 w-28 rounded-sm"
-          style={{ background: warm ? "#c4622d" : "#111827" }}
-        />
-        <div className="h-1.5 w-16 rounded-sm bg-slate-300" />
-      </div>
-
-      <div className={twoColumn ? "mt-5 grid grid-cols-[0.75fr_1.25fr] gap-4" : "mt-5"}>
-        {twoColumn && (
-          <div className="space-y-3">
-            <div className="h-16 rounded-md bg-slate-100" />
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="space-y-1">
-                <div className="h-1.5 w-10 rounded-sm" style={{ background: accent }} />
-                <div className="h-1 w-full rounded-sm bg-slate-200" />
-                <div className="h-1 w-4/5 rounded-sm bg-slate-200" />
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="space-y-4">
-          {[0, 1, 2, 3].map((section) => (
-            <div key={section} className="space-y-1.5">
-              <div
-                className="h-1.5 w-20 rounded-sm"
-                style={{ background: section === 0 ? accent : "#334155" }}
-              />
-              <div className="h-1 w-full rounded-sm bg-slate-200" />
-              <div className="h-1 w-11/12 rounded-sm bg-slate-200" />
-              <div className="h-1 w-2/3 rounded-sm bg-slate-200" />
+  if (template === "pure-ats") {
+    return (
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-[#e7e7e7] shadow-sm">
+        <div className="absolute inset-y-0 left-0 w-[34%] bg-[#303236] p-3">
+          <div className="mx-auto mb-4 h-14 w-14 rounded-full border-2 border-white bg-gradient-to-br from-slate-300 to-slate-500" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="mb-4 space-y-1.5">
+              <div className="h-1.5 w-14 bg-white/80" />
+              <div className="h-1 w-full bg-sky-400" />
+              <div className="h-1 w-4/5 bg-white/35" />
+              <div className="h-1 w-3/5 bg-white/35" />
+            </div>
+          ))}
+        </div>
+        <div className="ml-[34%] p-4">
+          <div className="mb-1 h-4 w-24 bg-slate-950" />
+          <div className="mb-4 h-2 w-20 bg-sky-500" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="mb-4 space-y-1.5">
+              <div className="h-1.5 w-20 bg-slate-800" />
+              <div className="h-1 w-full bg-slate-300" />
+              <div className="h-1 w-5/6 bg-slate-300" />
+              <div className="h-1 w-2/3 bg-slate-300" />
             </div>
           ))}
         </div>
       </div>
+    );
+  }
 
-      {template === "clear" && (
-        <div
-          className="absolute inset-x-4 top-4 h-12 rounded"
-          style={{ background: "rgba(74,222,128,0.35)" }}
-        />
+  if (template === "specialist" || template === "clean" || template === "clear") {
+    const dark = template === "clean" ? "#07111f" : template === "clear" ? "#1d1916" : "#0d0d0c";
+    const side = template === "clean";
+    return (
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg shadow-sm" style={{ background: dark }}>
+        <div className="border-b border-white/10 p-4">
+          <div className="mb-2 h-5 w-32 bg-white/90" />
+          <div className="h-1.5 w-24" style={{ background: accent }} />
+          <div className="mt-3 flex gap-3">
+            <div className="h-1 w-16 bg-white/45" />
+            <div className="h-1 w-14 bg-white/45" />
+            <div className="h-1 w-12 bg-white/45" />
+          </div>
+        </div>
+        <div className={side ? "grid grid-cols-[0.75fr_1.25fr]" : "grid grid-cols-[1.2fr_0.8fr]"}>
+          <div className="space-y-3 border-r border-white/10 p-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="space-y-1">
+                <div className="h-1.5 w-20" style={{ background: accent }} />
+                <div className="h-1 w-full bg-white/30" />
+                <div className="h-1 w-4/5 bg-white/30" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-4 p-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-1">
+                <div className="h-1.5 w-24 bg-white/80" />
+                <div className="h-1 w-full bg-white/25" />
+                <div className="h-1 w-5/6 bg-white/25" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "simple-ats" || template === "corporate") {
+    const header =
+      template === "simple-ats"
+        ? "linear-gradient(135deg,#5b5ca8,#c06bbd)"
+        : "#17391f";
+    return (
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-white shadow-sm">
+        <div className="p-4 text-white" style={{ background: header }}>
+          <div className="mb-2 h-8 w-8 rounded-full border border-white/60 bg-white/20" />
+          <div className="h-4 w-28 bg-white/90" />
+          <div className="mt-2 h-1.5 w-24 bg-white/55" />
+        </div>
+        <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 p-4">
+          <div className="space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="h-1.5 w-20 bg-slate-900" />
+                <div className="h-1 w-full bg-slate-300" />
+                <div className="h-1 w-4/5 bg-slate-300" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="space-y-1">
+                <div className="h-1.5 w-16" style={{ background: accent }} />
+                <div className="h-1 w-full bg-slate-200" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-[#fffdf6] p-4 shadow-sm">
+      {template === "two-column-ats" && (
+        <div className="absolute inset-y-0 left-0 w-[38%] bg-[#0f1a2e] p-4">
+          <div className="mb-4 h-10 w-10 rounded-full border border-blue-300 bg-blue-500/30" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="mb-4 space-y-1">
+              <div className="h-1.5 w-16 bg-blue-300" />
+              <div className="h-1 w-full bg-white/35" />
+              <div className="h-1 w-4/5 bg-white/35" />
+            </div>
+          ))}
+        </div>
       )}
+      <div className={template === "two-column-ats" ? "ml-[42%]" : ""}>
+        <div className="mb-4">
+          <div className="mb-2 h-5 w-28 bg-[#222]" />
+          <div className="h-1.5 w-20" style={{ background: accent }} />
+        </div>
+        {[0, 1, 2, 3].map((section) => (
+          <div key={section} className="mb-4 space-y-1.5">
+            <div className="h-1.5 w-20 bg-slate-800" />
+            <div className="h-1 w-full bg-slate-300" />
+            <div className="h-1 w-11/12 bg-slate-300" />
+            <div className="h-1 w-2/3 bg-slate-300" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

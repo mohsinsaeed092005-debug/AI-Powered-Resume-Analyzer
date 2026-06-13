@@ -139,23 +139,23 @@ export function recommendTemplate(
 }
 
 export const TEMPLATE_LABELS: Record<TemplateName, string> = {
-  "pure-ats": "Pure ATS",
-  specialist: "Specialist",
-  clean: "Clean",
-  "simple-ats": "Simple ATS",
-  corporate: "Corporate",
-  clear: "Clear",
-  "precision-ats": "Precision ATS",
-  "two-column-ats": "Two Column ATS",
+  "pure-ats": "Matthew Sidebar",
+  specialist: "Executive Noir",
+  clean: "Portfolio Dev",
+  "simple-ats": "Product Header",
+  corporate: "Policy Scholar",
+  clear: "Security Dark",
+  "precision-ats": "Finance Editorial",
+  "two-column-ats": "Data Sidebar",
 };
 
 export const TEMPLATE_DESCRIPTIONS: Record<TemplateName, string> = {
-  "pure-ats": "Strict ATS layout with clean black text and simple sections",
-  specialist: "Traditional specialist layout for experienced professionals",
-  clean: "Modern white-space focused resume with a left profile column",
-  "simple-ats": "Light ATS resume with blue headings and easy scanning",
-  corporate: "Corporate layout for business, HR, finance, and operations",
-  clear: "Fresh layout with strong header and skill emphasis",
-  "precision-ats": "Precise ATS layout with warm headings and balanced spacing",
-  "two-column-ats": "Two-column ATS format for skills-heavy profiles",
+  "pure-ats": "Polished grey sidebar resume with circular photo and blue accents",
+  specialist: "Black executive layout with premium serif typography and gold rules",
+  clean: "Dark developer portfolio layout with compact technical side rail",
+  "simple-ats": "Purple product header layout with clean white content columns",
+  corporate: "Green academic and policy layout with formal profile structure",
+  clear: "Dark cybersecurity layout with amber metadata and compact sections",
+  "precision-ats": "Editorial finance resume with refined two-column spacing",
+  "two-column-ats": "Navy data resume with strong sidebar and achievement cards",
 };

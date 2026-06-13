@@ -15,8 +15,10 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const isAuthPage = pathname === "/profile";
+  const authDisabled = process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
 
   useEffect(() => {
+    if (authDisabled) return;
     if (loading) return;
 
     if (!user && !isAuthPage) {
@@ -29,7 +31,11 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       const next = searchParams.get("next");
       router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
     }
-  }, [isAuthPage, loading, pathname, router, searchParams, user]);
+  }, [authDisabled, isAuthPage, loading, pathname, router, searchParams, user]);
+
+  if (authDisabled) {
+    return <>{children}</>;
+  }
 
   if (loading || (!user && !isAuthPage)) {
     return (

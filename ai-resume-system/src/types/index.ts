@@ -16,6 +16,21 @@ export interface RolePrediction {
   missingSkills: string[];
 }
 
+export interface JobListing {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  source: string;
+  url: string;
+  salary?: string;
+  jobType?: string;
+  publishedAt?: string;
+  tags: string[];
+  matchScore: number;
+  matchedSkills: string[];
+}
+
 export interface SkillGapResult {
   required: string[];
   userHas: string[];

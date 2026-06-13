@@ -8,12 +8,14 @@ interface DownloadPDFButtonProps {
   content: string;
   fileName?: string;
   template?: TemplateName;
+  profilePhoto?: string;
 }
 
 function DownloadPDFButton({
   content,
   fileName = "resume.pdf",
   template = DEFAULT_TEMPLATE,
+  profilePhoto,
 }: DownloadPDFButtonProps) {
   const [exporting, setExporting] = useState(false);
 
@@ -22,11 +24,11 @@ function DownloadPDFButton({
     setExporting(true);
     try {
       const { exportResumePdf } = await import("@/utils/pdf-export");
-      await exportResumePdf(content, fileName, template);
+      await exportResumePdf(content, fileName, template, profilePhoto);
     } finally {
       setExporting(false);
     }
-  }, [content, fileName, template, exporting]);
+  }, [content, fileName, template, profilePhoto, exporting]);
 
   return (
     <button
