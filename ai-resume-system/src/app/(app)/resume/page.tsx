@@ -2,19 +2,67 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import ResumeForm, { type ResumeFormData } from "@/components/ResumeForm";
 import ResumePreview from "@/components/ResumePreview";
 import ATSScoreCard from "@/components/ATSScoreCard";
 import SkillGapCard from "@/components/SkillGapCard";
 import TemplatePicker from "@/components/TemplatePicker";
+import JobPredictionCards from "@/components/JobPredictionCards";
 import { applyTemplate, DEFAULT_TEMPLATE, type TemplateName } from "@/templates";
 import {
   recommendTemplate,
   type TemplateRecommendation,
 } from "@/lib/recommend-template";
 import { mergeResumeState } from "@/utils/helpers";
-import type { SkillGapResult } from "@/types";
+import type { JobListing, RolePrediction, SkillGapResult } from "@/types";
+
+const COMMON_JOB_TERMS = [
+  "python",
+  "javascript",
+  "typescript",
+  "react",
+  "nextjs",
+  "next.js",
+  "nodejs",
+  "mongodb",
+  "sql",
+  "java",
+  "c++",
+  "c#",
+  "html",
+  "css",
+  "tailwind",
+  "ml",
+  "ai",
+  "machine learning",
+  "data science",
+  "tensorflow",
+  "pytorch",
+  "nlp",
+  "docker",
+  "kubernetes",
+  "aws",
+  "devops",
+  "git",
+  "api",
+  "rest",
+  "fastapi",
+  "django",
+  "linux",
+];
+
+function buildGeneratedResumeSkills(profile: ResumeFormData, resume: string) {
+  const haystack = `${profile.skills} ${profile.targetRole} ${resume}`.toLowerCase();
+  const inferred = COMMON_JOB_TERMS.filter((term) => haystack.includes(term));
+  return Array.from(
+    new Set(
+      [profile.skills, profile.targetRole, ...inferred]
+        .flatMap((value) => value.split(","))
+        .map((item) => item.trim())
+        .filter(Boolean)
+    )
+  ).join(", ");
+}
 
 const DownloadPDFButton = dynamic(
   () => import("@/components/DownloadPDFButton"),
@@ -38,9 +86,9 @@ const InterviewQuestionsPanel = dynamic(
 );
 
 export default function ResumePage() {
-  const router = useRouter();
   const [generating, setGenerating] = useState(false);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [predictingJobs, setPredictingJobs] = useState(false);
   const [content, setContent] = useState("");
   const [contentSource, setContentSource] = useState<"ai" | "fallback" | null>(null);
   const [error, setError] = useState("");
@@ -50,6 +98,9 @@ export default function ResumePage() {
   const [recommendation, setRecommendation] = useState<TemplateRecommendation | null>(null);
   const [manualTemplate, setManualTemplate] = useState(false);
   const [interviewQuestions, setInterviewQuestions] = useState("");
+  const [jobPredictions, setJobPredictions] = useState<RolePrediction[]>([]);
+  const [generatedJobs, setGeneratedJobs] = useState<JobListing[]>([]);
+  const [jobPredictionNote, setJobPredictionNote] = useState("");
   const [lastProfile, setLastProfile] = useState<ResumeFormData | null>(null);
   const [profilePhoto, setProfilePhoto] = useState("");
 
@@ -186,25 +237,52 @@ export default function ResumePage() {
     }
   }, [lastProfile, content, loadingQuestions]);
 
-  const predictJobsFromGeneratedResume = useCallback(() => {
-    if (!lastProfile || !content) return;
+  const predictJobsFromGeneratedResume = useCallback(async () => {
+    if (!lastProfile || !content || predictingJobs) return;
 
-    localStorage.setItem(
-      "job-predictor-seed",
-      JSON.stringify({
-        skills: lastProfile.skills,
-        targetRole: lastProfile.targetRole,
-        resumeText: content,
-        createdAt: Date.now(),
-      })
-    );
+    setPredictingJobs(true);
+    setJobPredictionNote("");
+    setJobPredictions([]);
+    setGeneratedJobs([]);
 
-    mergeResumeState({
-      content,
-      profile: lastProfile,
-    });
-    router.push("/job-predictor");
-  }, [content, lastProfile, router]);
+    try {
+      const skillsText = buildGeneratedResumeSkills(lastProfile, content);
+      const predictionRes = await fetch("/api/predict-job", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skills: skillsText }),
+      });
+      const predictionData = await predictionRes.json();
+      const nextPredictions = predictionData.predictions ?? [];
+      setJobPredictions(nextPredictions);
+
+      const jobsRes = await fetch("/api/job-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          skills: skillsText,
+          roles: nextPredictions.map((prediction: RolePrediction) => prediction.role),
+        }),
+      });
+      const jobsData = await jobsRes.json();
+      setGeneratedJobs(jobsData.jobs ?? []);
+      setJobPredictionNote(
+        nextPredictions.length
+          ? "AI predicted jobs from your generated resume."
+          : "No strong role match found. Add more skills in the resume form and try again."
+      );
+
+      mergeResumeState({
+        content,
+        profile: lastProfile,
+        predictions: nextPredictions,
+      });
+    } catch {
+      setJobPredictionNote("Job prediction failed. Please try again.");
+    } finally {
+      setPredictingJobs(false);
+    }
+  }, [content, lastProfile, predictingJobs]);
 
   return (
     <div className="space-y-6">
@@ -256,11 +334,66 @@ export default function ResumePage() {
           <button
             type="button"
             onClick={predictJobsFromGeneratedResume}
-            disabled={!content || generating}
+            disabled={!content || generating || predictingJobs}
             className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            Predict Jobs from Generated Resume
+            {predictingJobs ? "Predicting jobs..." : "Predict Jobs from Generated Resume"}
           </button>
+          {(jobPredictionNote || predictingJobs || jobPredictions.length > 0 || generatedJobs.length > 0) && (
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-slate-900">Predicted Jobs</h2>
+                <p className="text-xs text-slate-500">
+                  AI checks your generated resume and shows matching roles and live jobs.
+                </p>
+              </div>
+              {jobPredictionNote && (
+                <p className="mb-4 rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">
+                  {jobPredictionNote}
+                </p>
+              )}
+              <JobPredictionCards predictions={jobPredictions} />
+              <div className="mt-5">
+                <h3 className="mb-3 text-sm font-bold text-slate-900">Live Matching Jobs</h3>
+                {!generatedJobs.length ? (
+                  <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                    {predictingJobs ? "Searching jobs..." : "No live jobs found yet."}
+                  </p>
+                ) : (
+                  <div className="grid gap-3">
+                    {generatedJobs.map((job) => (
+                      <article key={job.id} className="rounded-lg border border-slate-200 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h4 className="font-bold text-slate-900">{job.title}</h4>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {job.company} · {job.location}
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700">
+                            {job.matchScore}%
+                          </span>
+                        </div>
+                        {job.matchedSkills.length > 0 && (
+                          <p className="mt-3 text-xs text-slate-500">
+                            Match: {job.matchedSkills.slice(0, 5).join(", ")}
+                          </p>
+                        )}
+                        <a
+                          href={job.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-4 inline-flex h-9 items-center rounded-lg bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-800"
+                        >
+                          View Job
+                        </a>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
           <button
             type="button"
             onClick={fetchInterviewQuestions}
