@@ -33,6 +33,7 @@ yarn-error.log*
 # env files — never commit secrets; .env.example is safe to commit
 .env
 .env.*
+vercel-import.env
 !.env.example
 
 # vercel

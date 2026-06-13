@@ -1,27 +1,113 @@
 "use client";
 
-import { signIn, useSession } from "next-auth/react";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  updateProfile,
+} from "firebase/auth";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/components/AuthProvider";
+import { auth, googleProvider } from "@/lib/firebase";
+
+function getFirebaseErrorMessage(error: unknown) {
+  const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
+
+  switch (code) {
+    case "auth/email-already-in-use":
+      return "This email already has an account. Please sign in instead.";
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+      return "Email or password is incorrect.";
+    case "auth/weak-password":
+      return "Password should be at least 6 characters.";
+    case "auth/popup-closed-by-user":
+      return "Google sign in was closed before it finished.";
+    default:
+      return "Something went wrong. Please try again.";
+  }
+}
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { user, configured, logout } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<"signin" | "join">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = () => {
-    signIn("credentials", { email, password, callbackUrl: "/dashboard" });
+  const redirectAfterAuth = () => {
+    const next = searchParams.get("next");
+    router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
   };
 
-  if (session) {
+  const handleSubmit = async () => {
+    if (!auth) {
+      setError("Firebase is not configured yet. Add Firebase env variables and redeploy.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+
+    try {
+      if (tab === "signin") {
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+      } else {
+        const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        await updateProfile(credential.user, {
+          displayName: email.trim().split("@")[0],
+        });
+      }
+      redirectAfterAuth();
+    } catch (err) {
+      setError(getFirebaseErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!auth) {
+      setError("Firebase is not configured yet. Add Firebase env variables and redeploy.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+
+    try {
+      await signInWithPopup(auth, googleProvider);
+      redirectAfterAuth();
+    } catch (err) {
+      setError(getFirebaseErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (user) {
     return (
       <div className="text-white">
         <div className="max-w-md rounded-2xl border border-blue-500/15 bg-[#0b1120] p-5 sm:p-8">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 text-2xl">
-            {session.user?.name?.[0] ?? "U"}
+            {user.displayName?.[0] ?? user.email?.[0]?.toUpperCase() ?? "U"}
           </div>
-          <h2 className="mb-1 text-xl font-bold">{session.user?.name}</h2>
-          <p className="text-sm text-slate-400">{session.user?.email}</p>
+          <h2 className="mb-1 text-xl font-bold">
+            {user.displayName ?? user.email?.split("@")[0]}
+          </h2>
+          <p className="text-sm text-slate-400">{user.email}</p>
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-6 rounded-xl border border-blue-500/20 px-4 py-2 text-sm text-blue-300 transition-colors hover:bg-blue-500/10"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
     );
@@ -44,6 +130,12 @@ export default function ProfilePage() {
         </div>
 
         <div className="rounded-2xl border border-blue-500/15 bg-[#0b1120] p-5 sm:p-8">
+          {!configured && (
+            <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-200">
+              Firebase env variables are missing locally. Add them in .env.local for local testing.
+            </div>
+          )}
+
           <div className="mb-7 flex border-b border-blue-500/15">
             {(["signin", "join"] as const).map((t) => (
               <button
@@ -87,10 +179,20 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={handleSubmit}
+              disabled={busy}
               className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 py-3.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
             >
-              {tab === "signin" ? "Sign In to Dashboard" : "Create Free Account"}
+              {busy
+                ? "Please wait..."
+                : tab === "signin"
+                  ? "Sign In to Dashboard"
+                  : "Create Free Account"}
             </button>
+            {error && (
+              <p className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
+                {error}
+              </p>
+            )}
           </div>
 
           <div className="relative my-5 text-center text-xs text-slate-600">
@@ -100,39 +202,14 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              {
-                label: "G",
-                bg: "bg-white/5",
-                onClick: () => signIn("google", { callbackUrl: "/dashboard" }),
-              },
-              {
-                label: "🍎",
-                bg: "bg-white/5",
-                onClick: () => signIn("apple", { callbackUrl: "/dashboard" }),
-              },
-              {
-                label: "𝕏",
-                bg: "bg-white/5",
-                onClick: () => signIn("twitter", { callbackUrl: "/dashboard" }),
-              },
-              {
-                label: "💬",
-                bg: "bg-[#5865f2]/15",
-                onClick: () => signIn("discord", { callbackUrl: "/dashboard" }),
-              },
-            ].map(({ label, bg, onClick }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={onClick}
-                className={`${bg} rounded-xl border border-white/10 py-3 text-sm transition-colors hover:bg-white/10`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={busy}
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Continue with Google
+          </button>
         </div>
       </div>
     </div>
